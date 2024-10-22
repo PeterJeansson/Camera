@@ -1,0 +1,11 @@
+# ignore the virtual environment camera
+camera/
+
+# ignore pycache
+__pycache__/
+
+#ignore workspace files
+/*workspace
+
+#ignore vscode folder
+.vscode/

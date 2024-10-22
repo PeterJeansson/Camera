@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Photo Gallery</title>
+    <style>
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .gallery img {
+            margin: 5px;
+            max-width: 200px;
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photo Gallery</h1>
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        fetch('http://localhost:8000/photos')  // Update with your server URL
+            .then(response => response.json())
+            .then(photos => {
+                const gallery = document.getElementById('gallery');
+                photos.forEach(photo => {
+                    const img = document.createElement('img');
+                    img.src = `http://localhost:8000/photos/${photo.id}`;  // Update with your server URL
+                    img.alt = photo.filename;
+                    gallery.appendChild(img);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching photos:', error);
+            });
+    </script>
+</body>
+</html>

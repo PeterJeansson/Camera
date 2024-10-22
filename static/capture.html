@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capture Photo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #video, #preview {
+            width: 640px;
+            height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #controls, #preview-controls {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #preview-section {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Capture Photo</h1>
+
+    <!-- Video Stream -->
+    <video id="video" autoplay></video>
+    <div id="controls">
+        <button id="snap">Snap Photo</button>
+    </div>
+
+    <!-- Preview Section -->
+    <div id="preview-section">
+        <h2>Preview</h2>
+        <canvas id="canvas" width="600" height="480" style="display:none;"></canvas>
+        <img id="preview" src="" alt="Photo Preview">
+        <div id="preview-controls">
+            <button id="send">Send</button>
+            <button id="retake">Retake</button>
+            <button id="discard">Discard</button>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const snapButton = document.getElementById('snap');
+        const previewSection = document.getElementById('preview-section');
+        const previewImage = document.getElementById('preview');
+        const sendButton = document.getElementById('send');
+        const retakeButton = document.getElementById('retake');
+        const discardButton = document.getElementById('discard');
+
+        let capturedBlob = null;
+
+        // Access the camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { console.error("Error accessing camera: ", err); alert("Cannot access camera."); });
+
+        // Snap Photo Event
+        snapButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob(blob => {
+                capturedBlob = blob;
+                const url = URL.createObjectURL(blob);
+                previewImage.src = url;
+                previewSection.style.display = 'block';
+            }, 'image/jpeg');
+        });
+
+        // Send Photo Event
+        sendButton.addEventListener('click', () => {
+            if (!capturedBlob) {
+                alert("No photo to send.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', capturedBlob, 'photo.jpg');
+
+            fetch('http://localhost:8000/upload', {  // Update with your server URL
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Photo uploaded successfully!');
+                console.log(data);
+                resetPreview();
+            })
+            .catch(error => {
+                console.error('Error uploading photo:', error);
+                alert('Failed to upload photo.');
+            });
+        });
+
+        // Retake Photo Event
+        retakeButton.addEventListener('click', () => {
+            resetPreview();
+        });
+
+        // Discard Photo Event
+        discardButton.addEventListener('click', () => {
+            resetPreview();
+        });
+
+        // Function to reset the preview section
+        function resetPreview() {
+            capturedBlob = null;
+            previewImage.src = '';
+            previewSection.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
